@@ -11,25 +11,25 @@ class Ordinal():
         """
         Konstruktor ordinala.
         Argumenti:
-        arg -- prirodni broj ili dict čiji su ključevi Ordinal, a vrijednosti prirodni brojevi
+        arg -- prirodni broj ili lista parova (alfa,b) gdje je alfa Ordinal, a b prirodni broj
         """
         if isinstance(arg, int):
             if arg >= 0:
-                arg = {Ordinal.zero: arg}
+                arg = [(Ordinal.zero, arg)]
             else:
                 raise ValueError("Ordinal ne može biti negativan broj")
-        summands = Counter(arg)
-        self.summands = Counter()
+        summands = arg
+        self.summands = []
         
-        for exp, coeff in summands.items():
-            if not isinstance(coeff, int) or coeff < 0:
+        for exp, coef in summands:
+            if not isinstance(coef, int) or coef < 0:
                 raise ValueError("Koeficijent mora biti prirodni broj")
 
             if not isinstance(exp, Ordinal):
                 raise ValueError("Eksponent mora biti Ordinal")
 
-            if coeff > 0:
-                self.summands[exp] += coeff
+            if coef > 0:
+                self.summands.append((exp,coef))
     
     @classmethod
     def coerce(cls, arg):
@@ -49,30 +49,25 @@ class Ordinal():
         """ Pretvara obični prirodan broj iz tipa int u tip Ordinal. """
         if not isinstance(n, int) or n < 0:
                 raise ValueError("Argument funkcije mora biti prirodni broj")
-        return cls({Ordinal.zero:n})
+        return cls([(Ordinal.zero, n)])
     
-    #! Sljedeće dvije funkcije su mi totalno čudni interfejs za sumande, mislim da sam o tome već pričao. 
-    #! Koliko vidim, jedini kontekst u kojem ih pozivate je prvo s argumentom 0, pa onda svaki sljedeći poziv sa
-    #! za jedan većim argumentom. Python to puno čišće opisuje _iteratorima_. 
-    #! for coef, exp in self.cnf():, ili it = self.cnf(), pa onda kad Vam zatreba sljedeći par: coef, exp = next(it)
-    #! Naravno, možete imati i dva nezavisna iteratora, ali koliko vidim, ionako Vam koeficijent i eksponent uvijek
-    #! trebaju u paru.
-    
-    #! Alternativno, (mislim da sam i o tome već pričao) ako su Vam iteratori prekomplicirani, mislim da bi imalo smisla
-    #! reprezentirati Ordinal kao listu parova [(exp, coef), (exp, coef), ...] sortiranih obrnuto po eksponentima.
-    #! To efektivno imate s ovim donjim list(dict(sorted(.items()))), samo nema smisla sortirati svaki put iznova, pobogu.
-    #! Dobra stvar je da onda uređaj bude doslovno pythonov < na takvim listama (leksikografski).
-    
-    #! Loša vijest je da Vam ipak tu i tamo treba nekakav dict-access iz ključeva u vrijednosti. Ali ovako na prvi pogled,
-    #! jedino vidim da vadite ključeve 0 i 1 (odnosno Ordinal.zero i Ordinal.one:). Ako i ne, daleko je manje posla
-    #! _tu_ imati linearni search po listi parova nego sort svaki put kad vadite bilo koji coef ili exp po rednom broju.
-    def coefficient(self, k):
-        """ Vraća faktor od k-tog sumanda ordinala self. """
-        return list(self.summands.values())[k] 
-    
-    def exponent(self, k):
-        """ Vraća eksponent od k-tog sumanda ordinala self. """
-        return list(self.summands.keys())[k] 
+    def __getitem__(self, key):
+        for exp, coef in self.summands:
+            if exp == key:
+                return coef
+        return 0
+        
+    def __setitem__(self, key, value):
+        if value == 0:
+            return
+        
+        for i, (exp, coef) in enumerate(self.summands):
+            if exp == key:
+                self.summands[i] = (key, value)
+                return
+        
+        self.summands.append((key, value))
+        self.summands.sort(reverse=True)
     
     
     @property
@@ -81,7 +76,7 @@ class Ordinal():
         Funkcija koja određuje je li ordinal sljedbenik.
         Pomoću toga se može odrediti i je li granični ordinal sa "not alfa.is_successor", gdje je alfa Ordinal.
         """
-        return self.summands[Ordinal.zero] != 0
+        return self[Ordinal.zero] != 0
 
     @staticmethod
     def _make_string(exp,coef):
@@ -90,7 +85,7 @@ class Ordinal():
         if exp == 0:
             return s + str(coef)
         if exp < Ordinal.omega:
-            exp = exp.coefficient(0)
+            exp = exp.summands[0][1]
 
         if exp == 0:
             s += str(coef)
@@ -116,7 +111,7 @@ class Ordinal():
     def __str__(self):
         if self == 0:
             return '0'
-        summands = [self._make_string(exp,self.summands[exp]) for exp in self.summands]
+        summands = [self._make_string(exp,coef) for exp,coef in self.summands]
         return ' + '.join(summands)
     
     @staticmethod
@@ -126,7 +121,7 @@ class Ordinal():
         if exp == 0:
             return s + repr(coef)
         if exp < Ordinal.omega:
-            exp = exp.coefficient(0)
+            exp = exp.summands[0][1]
 
         if exp == 0:
             s += repr(coef)
@@ -149,7 +144,7 @@ class Ordinal():
         return s
     
     def __repr__(self):
-        summands = [self._make_direct_str(exp,self.summands[exp]) for exp in self.summands]
+        summands = [self._make_direct_str(exp,coef) for exp,coef in self.summands]
         return ' + '.join(summands)
     
     def _repr_latex_(self):
@@ -176,10 +171,10 @@ class Ordinal():
             j = 0
 
             while i < len(self.summands) and j < len(other.summands):
-                coef1 = self.coefficient(i)
-                coef2 = other.coefficient(j)
-                exp1 = self.exponent(i)
-                exp2 = other.exponent(j)
+                coef1 = self.summands[i][1]
+                coef2 = other.summands[j][1]
+                exp1 = self.summands[i][0]
+                exp2 = other.summands[j][0]
 
                 if exp1 > exp2:
                     return False
@@ -204,7 +199,7 @@ class Ordinal():
             return NotImplemented
     
     def __hash__(self):
-        return hash((Ordinal, frozenset(self.summands.items())))
+        return hash((Ordinal, frozenset(self.summands)))
     
     def __add__(self, other):
         """
@@ -226,36 +221,36 @@ class Ordinal():
         i = 0
         j = 0
         
-        exp1 = self.exponent(i)
-        exp2 = other.exponent(j)
+        exp1 = self.summands[i][0]
+        exp2 = other.summands[j][0]
         
         
-        result = Counter()
+        result = Ordinal([])
         
         while exp1 > exp2:
-            coef1 = self.coefficient(i)
+            coef1 = self.summands[i][1]
             result[exp1] = coef1
             i += 1
             
             if i >= len(self.summands):
                 break
 
-            exp1 = self.exponent(i)
+            exp1 = self.summands[i][0]
             
         
-        resultCoef = other.coefficient(j)
+        resultCoef = other.summands[j][1]
         if i < len(self.summands) and exp1 == exp2:
-            resultCoef += self.coefficient(i)
+            resultCoef += self.summands[i][1]
         
         result[exp2] = resultCoef
 
         j += 1
         while j < len(other.summands):
-            exp2 = other.exponent(j)
-            result[exp2] = other.summands[exp2]
+            exp2 = other.summands[j][0]
+            result[exp2] = other[exp2]
             j += 1
             
-        return Ordinal(result)
+        return result
 
     def __radd__(self, other):
         """
@@ -293,15 +288,15 @@ class Ordinal():
                 
         i = 0
         
-        exp1 = self.exponent(i)
-        exp2 = other.exponent(i)
+        exp1 = self.summands[i][0]
+        exp2 = other.summands[i][0]
         
         
-        result = Counter()
+        result = Ordinal([])
         
         while exp1 == exp2:
-            coef1 = self.coefficient(i)
-            coef2 = other.coefficient(i)
+            coef1 = self.summands[i][1]
+            coef2 = other.summands[i][1]
                 
             result[exp1] = coef1 - coef2
             i += 1
@@ -312,16 +307,16 @@ class Ordinal():
             if i >= len(self.summands) or i >= len(other.summands):
                 break
 
-            exp1 = self.exponent(i)
-            exp2 = other.exponent(i)
+            exp1 = self.summands[i][0]
+            exp2 = other.summands[i][0]
             
 
         while i < len(self.summands):
-            exp1 = self.exponent(i)
-            result[exp1] = self.summands[exp1]
+            exp1 = self.summands[i][0]
+            result[exp1] = self[exp1]
             i += 1
             
-        return Ordinal(result)
+        return result
     
     def __rsub__(self, other):
         """
@@ -356,32 +351,32 @@ class Ordinal():
         i = 0
         j = 0
         
-        exp1 = self.exponent(i)
-        exp2 = other.exponent(j)
+        exp1 = self.summands[i][0]
+        exp2 = other.summands[j][0]
         
-        result = Counter()
+        result = Ordinal([])
         
         while exp2 > 0:
             resultExp = exp1 + exp2
-            result[resultExp] += other.coefficient(j)
+            result[resultExp] += other.summands[j][1]
             j += 1
             
             if j >= len(other.summands):
                 break
                 
-            exp2 = other.exponent(j)
+            exp2 = other.summands[j][0]
         
         if j < len(other.summands):
-            resultCoef = other.coefficient(j) * self.coefficient(i)
+            resultCoef = other.summands[j][1] * self.summands[i][1]
             result[exp1] += resultCoef
             
             i += 1
             while i < len(self.summands):
-                exp1 = self.exponent(i)
-                result[exp1] += self.summands[exp1]
+                exp1 = self.summands[i][0]
+                result[exp1] += self[exp1]
                 i += 1
             
-        return Ordinal(result)
+        return result
 
     def __rmul__(self, other):
         """
@@ -420,32 +415,32 @@ class Ordinal():
         i = 0
         j = 0
         
-        exp1 = self.exponent(i)
-        exp2 = other.exponent(j)
+        exp1 = self.summands[i][0]
+        exp2 = other.summands[j][0]
         
-        result = Counter()
+        result = Ordinal([])
         
         while exp1 > exp2:
             resultExp = exp1 - exp2
-            result[resultExp] += self.coefficient(i)
+            result[resultExp] += self.summands[i][1]
             i += 1
             
             if i >= len(self.summands):
                 break
                 
-            exp1 = self.exponent(i)
+            exp1 = self.summands[i][0]
             
         
         if exp1 == exp2:
-            coef1 = self.coefficient(i)
-            coef2 = other.coefficient(j)
+            coef1 = self.summands[i][1]
+            coef2 = other.summands[j][1]
 
             if coef1 > coef2:
                 resultCoef = coef1 // coef2
                 result[Ordinal.zero] += resultCoef
                 
             
-        return Ordinal(result)
+        return result
 
     def __rfloordiv__(self, other):
         """
@@ -529,11 +524,11 @@ class Ordinal():
         if other < Ordinal.omega:
             if self < Ordinal.omega:
                 # self < omega, other < omega
-                result = self.summands[Ordinal.zero] ** other.summands[Ordinal.zero]
+                result = self[Ordinal.zero] ** other[Ordinal.zero]
 
             else:
                 # self >= omega, other < omega
-                coef2 = other.coefficient(0)
+                coef2 = other.summands[0][1]
                 
                 if coef2 == 0:
                     return Ordinal.one
@@ -542,10 +537,10 @@ class Ordinal():
                 
                 i = 0
                 j = 0
-                result = Counter()
+                result = Ordinal([])
                 
-                exp1 = self.exponent(0)
-                coef1 = self.coefficient(0)
+                exp1 = self.summands[0][0]
+                coef1 = self.summands[0][1]
                 
                 tmp = exp1*(coef2-1)
                 
@@ -560,23 +555,23 @@ class Ordinal():
                     if i >= len(self.summands):
                         break
                         
-                    exp1 = self.exponent(i)
-                    coef1 = self.coefficient(i)
+                    exp1 = self.summands[i][0]
+                    coef1 = self.summands[i][1]
                     
                 if exp1 == 0:
                     if coef1 > 0:
-                        tmpCoef = self.coefficient(0) * coef1;
+                        tmpCoef = self.summands[0][1] * coef1;
 
                         for j in range(1,coef2):
-                            tmpExp =  self.exponent(0) * (coef2-j)
+                            tmpExp =  self.summands[0][0] * (coef2-j)
                             result[tmpExp] = tmpCoef
                             
                             i = 1
                             while i < len(self.summands)-1:
-                                exp1 = self.exponent(i)
-                                coef1 = self.coefficient(i)
+                                exp1 = self.summands[i][0]
+                                coef1 = self.summands[i][1]
 
-                                tmpExp =  self.exponent(0) * (coef2-j-1)
+                                tmpExp =  self.summands[0][0] * (coef2-j-1)
 
                                 if tmpExp == 0:
                                     return Ordinal.zero
@@ -597,41 +592,41 @@ class Ordinal():
                 result = 1
             elif self < Ordinal.omega:
                 # 1 < self < omega, other >= omega
-                result = Counter()
-                tmp = Counter()
+                result = Ordinal([])
+                tmp = Ordinal([])
 
                 for i in range(len(other.summands)):
-                        exp2 = other.exponent(i)
-                        coef2 = other.coefficient(i)
+                        exp2 = other.summands[i][0]
+                        coef2 = other.summands[i][1]
                         if exp2:
                             if exp2 < Ordinal.omega:
-                                    exp2 = Ordinal(exp2.coefficient(0) - 1)
+                                    exp2 = Ordinal(exp2.summands[0][1] - 1)
                             tmp[exp2] = coef2;
                         else:
                             natTerm = True
 
                 if natTerm == True:
-                    resCoef = self.coefficient(0) ** coef2;
+                    resCoef = self.summands[0][1] ** coef2;
                 else:
                     resCoef = 1;
 
-                result[Ordinal(tmp)] = resCoef
+                result[tmp] = resCoef
             else:
                 # self >= omega, other >= omega
-                exp1 = self.exponent(0)
+                exp1 = self.summands[0][0]
                 
-                result = Counter()
-                tmp = Counter()
+                result = Ordinal([])
+                tmp = Ordinal([])
 
                 for i in range(len(other.summands)):
-                        exp2 = other.exponent(i)
-                        coef2 = other.coefficient(i)
+                        exp2 = other.summands[i][0]
+                        coef2 = other.summands[i][1]
                         if exp2:
                             tmp[exp2] = coef2
                         else:
                             natTerm = True
 
-                tmpExp = exp1*Ordinal(tmp)
+                tmpExp = exp1*tmp
                 if tmpExp == 0:
                     return Ordinal.zero
                 result[tmpExp] = 1
@@ -639,9 +634,9 @@ class Ordinal():
                 
                 if natTerm == True:
                     tmp2 = self ** coef2
-                    return Ordinal(result) * tmp2
+                    return result * tmp2
 
-        return Ordinal(result)
+        return result
     
     def __rpow__(self, other):
         """
@@ -666,26 +661,23 @@ class Ordinal():
         alfa_k -- lambda izraz koji ovisi o k te uvrštavanjem nekog Ordinala k postaje Ordinal
         beta -- prirodni broj ili Ordinal
         """
-        #! Nemam ništa protiv da ovo ostane kao nekakva heuristika, ali treba dokumentirati da nije egzaktno
-        #! (za razliku od osnovnih operacija, koje bi morale biti egzaktne).
-        
         beta = Ordinal.coerce(beta)
         if not isinstance(beta, Ordinal):
             return NotImplemented
         
         sum = Ordinal.zero
         
-        for i in range(beta.summands[Ordinal.one]):
+        for i in range(beta[Ordinal.one]):
             alfa_fp2 = Ordinal.coerce(alfa_k(Ordinal.omega*i+2))
             
             if alfa_fp2:
-                sumExp = alfa_fp2.exponent(0)+1
-                sum = sum + Ordinal({sumExp:1})
+                sumExp = alfa_fp2.summands[0][0]+1
+                sum = sum + Ordinal([(sumExp,1)])
             
-        tmp = Ordinal.omega*beta.summands[Ordinal.one]
-        if beta.summands[Ordinal.zero] != 0:
+        tmp = Ordinal.omega*beta[Ordinal.one]
+        if beta[Ordinal.zero] != 0:
             sum = sum + alfa_k(tmp+0)
-            for i in range(1,beta.summands[Ordinal.zero]):
+            for i in range(1,beta[Ordinal.zero]):
                 sum = sum + alfa_k(tmp+i)
         
         return sum
@@ -707,7 +699,7 @@ class Ordinal():
         if not Ordinal.coerce(alfa_k(0)):
             return Ordinal.zero
         
-        for i in range(beta.summands[Ordinal.one]):
+        for i in range(beta[Ordinal.one]):
             alfa_fp2 = Ordinal.coerce(alfa_k(Ordinal.omega*i+2))
             
             if alfa_fp2 == Ordinal.zero:
@@ -716,19 +708,19 @@ class Ordinal():
                 if alfa_fp2 < Ordinal.omega:
                     prodExp = Ordinal.one
                 else:
-                    prodExp = alfa_fp2.exponent(0) * Ordinal.omega
+                    prodExp = alfa_fp2.summands[0][0] * Ordinal.omega
 
-                prod = prod*Ordinal({prodExp:1})
+                prod = prod*Ordinal([(prodExp,1)])
             
-        tmp = Ordinal.omega*beta.summands[Ordinal.one]
-        if beta.summands[Ordinal.zero] != 0:
+        tmp = Ordinal.omega*beta[Ordinal.one]
+        if beta[Ordinal.zero] != 0:
             prod = prod*alfa_k(tmp+0)
-            for i in range(1,beta.summands[Ordinal.zero]):
+            for i in range(1,beta[Ordinal.zero]):
                 prod = prod*alfa_k(tmp+i)
         
         return prod
 
 
-Ordinal.zero = Ordinal({})
-Ordinal.one = Ordinal({Ordinal.zero:1})
-Ordinal.omega = Ordinal({Ordinal.one:1})
+Ordinal.zero = Ordinal([])
+Ordinal.one = Ordinal([(Ordinal.zero,1)])
+Ordinal.omega = Ordinal([(Ordinal.one,1)])
