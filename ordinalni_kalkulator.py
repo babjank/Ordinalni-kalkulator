@@ -9,7 +9,8 @@ class Ordinal():
     
     def __init__(self, arg):
         """
-        Konstruktor ordinala.
+        Kreira novi objekt klase Ordinal.
+        
         Argumenti:
         arg -- prirodni broj ili lista parova (alfa,b) gdje je alfa Ordinal, a b prirodni broj
         """
@@ -30,11 +31,14 @@ class Ordinal():
 
             if coef > 0:
                 self.summands.append((exp,coef))
+
+        self.summands.sort(reverse=True)
     
     @classmethod
     def coerce(cls, arg):
         """
         Prima bilo kakav objekt i ako je moguće pretvara ga u Ordinal.
+        
         Argumenti koji su prhvatljivi za pretvorbu:
         arg -- prirodni broj ili Ordinal
         """
@@ -204,6 +208,7 @@ class Ordinal():
     def __add__(self, other):
         """
         Računa sumu ordinala self + other zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal
@@ -255,6 +260,7 @@ class Ordinal():
     def __radd__(self, other):
         """
         Računa sumu ordinala other + self zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj
@@ -270,9 +276,13 @@ class Ordinal():
         """
         Računa razliku ordinala self - other zadržavajući u CNF.
         Mora vrijediti self >= other.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal
+
+        Greške:
+        ArithmeticError -- ako se pokuša oduzeti veći ordinal od manjega
         """
         other = Ordinal.coerce(other)
         
@@ -322,9 +332,13 @@ class Ordinal():
         """
         Računa razliku ordinala other - self zadržavajući u CNF.
         Mora vrijediti other >= self.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj
+
+        Greške:
+        ArithmeticError -- ako se pokuša oduzeti veći ordinal od manjega
         """
         other = Ordinal.coerce(other)
         
@@ -336,6 +350,7 @@ class Ordinal():
     def __mul__(self, other):
         """
         Računa produkt ordinala self * other zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal
@@ -381,6 +396,7 @@ class Ordinal():
     def __rmul__(self, other):
         """
         Računa produkt ordinala other * self zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj
@@ -395,9 +411,13 @@ class Ordinal():
     def __floordiv__(self, other):
         """
         Računa self // other, odnosno količnik ordinala self / other zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         other = Ordinal.coerce(other)
         
@@ -445,9 +465,13 @@ class Ordinal():
     def __rfloordiv__(self, other):
         """
         Računa other // self, odnosno količnik ordinala other / self zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         other = Ordinal.coerce(other)
         
@@ -459,18 +483,26 @@ class Ordinal():
     def __mod__(self, other):
         """
         Računa self % other, odnosno ostatak dijeljenja ordinala self / other zadržavajući u CNF.
+        
         Argumenti
         self -- Ordinal
         other -- prirodni broj ili Ordinal različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         return self - other * (self // other)
     
     def __rmod__(self, other):
         """
         Računa other % self, odnosno ostatak dijeljenja ordinala other / self zadržavajući u CNF.
+        
         Argumenti
         self -- Ordinal
         other -- prirodni broj različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         other = Ordinal.coerce(other)
         
@@ -482,9 +514,13 @@ class Ordinal():
     def __truediv__(self, other):
         """
         Računa količnik i ostatak dijeljenja self / other zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         q = self // other
         r = self - other*q
@@ -493,9 +529,13 @@ class Ordinal():
     def __rtruediv__(self, other):
         """
         Računa količnik i ostatak dijeljenja other / self zadržavajući u CNF.
+        
         Argumenti
         self -- Ordinal
         other -- prirodni broj različiti od nula
+
+        Greške:
+        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
         """
         q = other // self
         r = other - self*q
@@ -504,6 +544,7 @@ class Ordinal():
     def __pow__(self, other):
         """
         Računa rezultat potenciranja ordinala self ^ other zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj ili Ordinal
@@ -641,6 +682,7 @@ class Ordinal():
     def __rpow__(self, other):
         """
         Računa rezultat potenciranja ordinala other ^ self zadržavajući u CNF.
+        
         Argumenti:
         self -- Ordinal
         other -- prirodni broj
@@ -657,6 +699,7 @@ class Ordinal():
         """
         Funkcija računa sumu izraza alfa_k koji predstavlja ordinal do granice beta = w*i1+i0.
         Ovo je heuristička metoda koja daje točan izraz u većini slučajeva, no ne uvijek.
+        
         Argumenti:
         alfa_k -- lambda izraz koji ovisi o k te uvrštavanjem nekog Ordinala k postaje Ordinal
         beta -- prirodni broj ili Ordinal
@@ -686,6 +729,7 @@ class Ordinal():
         """
         Funkcija računa umnožak izraza alfa_k koji predstavlja ordinal do granice beta = w*i1+i0.
         Ovo je heuristička metoda koja daje točan izraz u većini slučajeva, no ne uvijek.
+        
         Argumenti:
         alfa_k -- lambda izraz koji ovisi o k te uvrštavanjem nekog Ordinala k postaje Ordinal
         beta -- prirodni broj ili Ordinal
