@@ -109,7 +109,7 @@ class Ordinal():
                     s += ')'
                 s += '}'
             if coef != 1:
-                s += r'\cdot' + str(coef)
+                s += r' \cdot ' + str(coef)
         return s
     
     def __str__(self):
@@ -148,6 +148,8 @@ class Ordinal():
         return s
     
     def __repr__(self):
+        if self == 0:
+            return '0'
         summands = [self._make_direct_str(exp,coef) for exp,coef in self.summands]
         return ' + '.join(summands)
     
@@ -455,7 +457,7 @@ class Ordinal():
             coef1 = self.summands[i][1]
             coef2 = other.summands[j][1]
 
-            if coef1 > coef2:
+            if coef1 >= coef2:
                 resultCoef = coef1 // coef2
                 result[Ordinal.zero] += resultCoef
                 

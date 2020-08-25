@@ -103,7 +103,7 @@ class TestDivision(unittest.TestCase):
         self.assertEqual(3 // t,y)
         self.assertEqual(3 % t,z)
 
-    def test_ordinal_mul_ordinal(self):
+    def test_ordinal_div_ordinal(self):
         m = Ordinal([(w,1),(Ordinal(3),2),(Ordinal(2),5),(z,4)])
         n = Ordinal([(Ordinal(2),4),(y,7),(z,5)])
 
