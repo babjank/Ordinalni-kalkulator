@@ -1,5 +1,4 @@
 from functools import total_ordering
-from collections import Counter
 import copy
 
 
@@ -8,11 +7,24 @@ class Ordinal():
     """ Klasa koja reprezentira ordinale u Cantorovoj normalnoj formi. """
     
     def __init__(self, arg):
-        """
-        Kreira novi objekt klase Ordinal.
+        """ Kreira novi objekt klase Ordinal.
         
-        Argumenti:
-        arg -- prirodni broj ili lista parova (alfa,b) gdje je alfa Ordinal, a b prirodni broj
+        Parametri
+        ---------
+        arg : prirodni broj ili lista parova (exp : Ordinal, coef : prirodni broj)
+
+        Greške
+        ------
+        ValueError
+            Ako je `arg` negativan cijeli broj ili za `arg`= [(e1,c1),...,(ek,ck)]
+            ako postoji ej koji nije tipa Ordinal ili cj koji nije prirodni broj.
+
+        Primjeri
+        --------
+        >>> Ordinal(2)
+        2
+        >>> Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        w + 2
         """
         if isinstance(arg, int):
             if arg >= 0:
@@ -36,12 +48,7 @@ class Ordinal():
     
     @classmethod
     def coerce(cls, arg):
-        """
-        Prima bilo kakav objekt i ako je moguće pretvara ga u Ordinal.
-        
-        Argumenti koji su prhvatljivi za pretvorbu:
-        arg -- prirodni broj ili Ordinal
-        """
+        """ Prima bilo kakav objekt `arg` i ako je moguće pretvara ga u Ordinal. """
         if isinstance(arg, int) and arg >= 0:
             return cls(arg)
         else:
@@ -76,15 +83,16 @@ class Ordinal():
     
     @property
     def is_successor(self):
-        """
-        Funkcija koja određuje je li ordinal sljedbenik.
-        Pomoću toga se može odrediti i je li granični ordinal sa "not alfa.is_successor", gdje je alfa Ordinal.
+        """ Je li ordinal `self` sljedbenik?
+
+        Pomoću toga se može odrediti i je li taj ordinal granični ordinal sa
+        "not self.is_successor".
         """
         return self[Ordinal.zero] != 0
 
     @staticmethod
     def _make_string(exp,coef):
-        """ Pretvara sumand u latex izraz. """
+        """ Pretvara pribrojnik CNF-a (`exp`,`coef`) u latex izraz. """
         s = ''
         if exp == 0:
             return s + str(coef)
@@ -120,7 +128,7 @@ class Ordinal():
     
     @staticmethod
     def _make_direct_str(exp,coef):
-        """ Pretvara sumand u python izraz. """
+        """ Pretvara pribrojnik CNF-a (`exp`,`coef`) u python izraz. """
         s = ''
         if exp == 0:
             return s + repr(coef)
@@ -157,11 +165,12 @@ class Ordinal():
         return r"$%s$" % str(self)
     
     def __bool__(self):
+        """ Je li ordinal `self` različit od 0? """
         return self != Ordinal.zero
     
     def __eq__(self, other):
-        if isinstance(other, int):
-            other = Ordinal(other)
+        """ Jesu li ordinali `self` i `other` jednaki? """
+        other = Ordinal.coerce(other)
 
         if isinstance(other, Ordinal):
             return self.summands == other.summands
@@ -169,8 +178,8 @@ class Ordinal():
             return False
 
     def __lt__(self, other):
-        if isinstance(other, int):
-            other = Ordinal(other)
+        """ Je li ordinal `self` manji od `other`? """
+        other = Ordinal.coerce(other)
             
         if isinstance(other, Ordinal):
             i = 0
@@ -208,12 +217,21 @@ class Ordinal():
         return hash((Ordinal, frozenset(self.summands)))
     
     def __add__(self, other):
-        """
-        Računa sumu ordinala self + other zadržavajući u CNF.
+        """ Zbroj ordinala `self` i `other`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> a = Ordinal(2)
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> a + b
+        w + 2
+        >>> b + 2
+        w + 4
         """
         other = Ordinal.coerce(other)
         
@@ -260,12 +278,21 @@ class Ordinal():
         return result
 
     def __radd__(self, other):
-        """
-        Računa sumu ordinala other + self zadržavajući u CNF.
+        """ Zbroj ordinala `other` i `self`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> a = Ordinal(2)
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> 2 + a
+        4
+        >>> 2 + b
+        w + 2
         """
         other = Ordinal.coerce(other)
         
@@ -275,16 +302,27 @@ class Ordinal():
         return other + self
     
     def __sub__(self, other):
-        """
-        Računa razliku ordinala self - other zadržavajući u CNF.
-        Mora vrijediti self >= other.
+        """ Razlika ordinala `self` i `other`, tim redom.
+        Mora vrijediti `self` >= `other`.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
 
-        Greške:
-        ArithmeticError -- ako se pokuša oduzeti veći ordinal od manjega
+        Greške
+        ------
+        ArithmeticError
+            Ako je `self` manji od `other`.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b - 2
+        w + 2
+        >>> b - w
+        2
         """
         other = Ordinal.coerce(other)
         
@@ -331,16 +369,24 @@ class Ordinal():
         return result
     
     def __rsub__(self, other):
-        """
-        Računa razliku ordinala other - self zadržavajući u CNF.
-        Mora vrijediti other >= self.
+        """ Razlika ordinala `other` i `self`, tim redom.
+        Mora vrijediti `other` >= `self`.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
 
-        Greške:
-        ArithmeticError -- ako se pokuša oduzeti veći ordinal od manjega
+        Greške
+        ------
+        ArithmeticError
+            Ako je `other` manji od `self`.
+
+        Primjeri
+        --------
+        >>> a = Ordinal(2)
+        >>> 2 - a
+        0
         """
         other = Ordinal.coerce(other)
         
@@ -350,12 +396,21 @@ class Ordinal():
         return other - self
             
     def __mul__(self, other):
-        """
-        Računa produkt ordinala self * other zadržavajući u CNF.
+        """ Produkt ordinala `self` i `other`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b * 2
+        w*2 + 2
+        >>> w * b
+        w**2 + w*2
         """
         other = Ordinal.coerce(other)
         
@@ -396,12 +451,18 @@ class Ordinal():
         return result
 
     def __rmul__(self, other):
-        """
-        Računa produkt ordinala other * self zadržavajući u CNF.
+        """ Produkt ordinala `other` i `self`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> 2 * b
+        w + 4
         """
         other = Ordinal.coerce(other)
         
@@ -411,15 +472,26 @@ class Ordinal():
         return other * self
     
     def __floordiv__(self, other):
-        """
-        Računa self // other, odnosno količnik ordinala self / other zadržavajući u CNF.
+        """ Količnik dijeljenja ordinala `self` i `other`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `other` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b // 2
+        w + 1
+        >>> b // w
+        1
         """
         other = Ordinal.coerce(other)
         
@@ -465,15 +537,26 @@ class Ordinal():
         return result
 
     def __rfloordiv__(self, other):
-        """
-        Računa other // self, odnosno količnik ordinala other / self zadržavajući u CNF.
+        """ Količnik dijeljenja ordinala `other` i `self`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `self` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> a = Ordinal(2)
+        >>> 2 // a
+        1
+        >>> 2 // w
+        0
         """
         other = Ordinal.coerce(other)
         
@@ -483,28 +566,50 @@ class Ordinal():
         return other // self
     
     def __mod__(self, other):
-        """
-        Računa self % other, odnosno ostatak dijeljenja ordinala self / other zadržavajući u CNF.
+        """ Ostatak dijeljenja ordinala `self` i `other`, tim redom.
         
-        Argumenti
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `other` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b % 2
+        0
+        >>> b % w
+        2
         """
         return self - other * (self // other)
     
     def __rmod__(self, other):
-        """
-        Računa other % self, odnosno ostatak dijeljenja ordinala other / self zadržavajući u CNF.
+        """ Ostatak dijeljenja ordinala `other` i `self`, tim redom.
         
-        Argumenti
-        self -- Ordinal
-        other -- prirodni broj različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `self` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> a = Ordinal(2)
+        >>> 2 % a
+        0
+        >>> 2 % w
+        2
         """
         other = Ordinal.coerce(other)
         
@@ -514,42 +619,73 @@ class Ordinal():
         return other % self
     
     def __truediv__(self, other):
-        """
-        Računa količnik i ostatak dijeljenja self / other zadržavajući u CNF.
+        """ Količnik i ostatak dijeljenja ordinala `self` i `other`, tim redom.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `other` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b / 2
+        (w + 1, 0)
+        >>> b / w
+        (1, 2)
         """
         q = self // other
         r = self - other*q
         return q,r
     
     def __rtruediv__(self, other):
-        """
-        Računa količnik i ostatak dijeljenja other / self zadržavajući u CNF.
+        """ Količnik i ostatak dijeljenja ordinala `other` i `self`, tim redom.
         
-        Argumenti
-        self -- Ordinal
-        other -- prirodni broj različiti od nula
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
 
-        Greške:
-        ZeroDivisionError -- ako se pokuša dijeliti sa nulom
+        Greške
+        ------
+        ZeroDivisionError
+            Ako je `self` jednak nula.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> a = Ordinal(2)
+        >>> 2 / a
+        (1, 0)
+        >>> 2 / w
+        (0, 2)
         """
         q = other // self
         r = other - self*q
         return q,r
             
     def __pow__(self, other):
-        """
-        Računa rezultat potenciranja ordinala self ^ other zadržavajući u CNF.
+        """ Potencija ordinala `self` na `other`.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> b ** 2
+        w**2 + w*2 + 2
+        >>> w ** b
+        w**w
         """
         other = Ordinal.coerce(other)
         
@@ -682,12 +818,21 @@ class Ordinal():
         return result
     
     def __rpow__(self, other):
-        """
-        Računa rezultat potenciranja ordinala other ^ self zadržavajući u CNF.
+        """ Potencija ordinala `other` na `self`.
         
-        Argumenti:
-        self -- Ordinal
-        other -- prirodni broj
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> a = Ordinal(2)
+        >>> 2 ** a
+        4
+        >>> 2 ** w
+        w
         """
         other = Ordinal.coerce(other)
         
@@ -698,13 +843,27 @@ class Ordinal():
             
     
     def Isummation(alfa_k,beta):
-        """
-        Funkcija računa sumu izraza alfa_k koji predstavlja ordinal do granice beta = w*i1+i0.
-        Ovo je heuristička metoda koja daje točan izraz u većini slučajeva, no ne uvijek.
+        """ Suma indeksirane familije ordinalnih brojeva { `alfa_k` : k < `beta` }.
         
-        Argumenti:
-        alfa_k -- lambda izraz koji ovisi o k te uvrštavanjem nekog Ordinala k postaje Ordinal
-        beta -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        alfa_k : lambda izraz koji ovisi o k
+            Uvrštavanjem nekog Ordinala k lambda izraz postaje Ordinal.
+        beta : prirodni broj ili Ordinal
+            Mora biti oblika w * i1 + i0.
+
+        Napomene
+        --------
+        Ovo je heuristička metoda koja daje točan izraz u većini slučajeva,
+        no ne uvijek.
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> Ordinal.Isummation(lambda k: w + k, w)
+        w**2
+        >>> Ordinal.Isummation(lambda k: (w + k)**k, 4)
+        w**3 + w**2*3 + w*3 + 3
         """
         beta = Ordinal.coerce(beta)
         if not isinstance(beta, Ordinal):
@@ -728,13 +887,27 @@ class Ordinal():
         return sum
         
     def Iproduct(alfa_k,beta):
-        """
-        Funkcija računa umnožak izraza alfa_k koji predstavlja ordinal do granice beta = w*i1+i0.
-        Ovo je heuristička metoda koja daje točan izraz u većini slučajeva, no ne uvijek.
+        """ Produkt indeksirane familije ordinalnih brojeva { `alfa_k` : k < `beta` }.
         
-        Argumenti:
-        alfa_k -- lambda izraz koji ovisi o k te uvrštavanjem nekog Ordinala k postaje Ordinal
-        beta -- prirodni broj ili Ordinal
+        Parametri
+        ---------
+        alfa_k : lambda izraz koji ovisi o k
+            Uvrštavanjem nekog Ordinala k lambda izraz postaje Ordinal.
+        beta : prirodni broj ili Ordinal
+            Mora biti oblika w * i1 + i0.
+
+        Napomene
+        --------
+        Ovo je heuristička metoda koja daje točan izraz u većini slučajeva,
+        no ne uvijek.
+        
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> Ordinal.Iproduct(lambda k: w, w)
+        w**w
+        >>> Ordinal.Iproduct(lambda k: w * k, w)
+        0
         """
         beta = Ordinal.coerce(beta)
         if not isinstance(beta, Ordinal):
