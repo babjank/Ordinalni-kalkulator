@@ -4,12 +4,21 @@ import time
 
 w = Ordinal.omega
 
-class CalculatorError(Exception):
+class Error(Exception):
+    """Bazna klasa za greške."""
     pass
 
-def calculate(unos, memory):    
+class CalculatorError(Error):
+    """Greška nastala tijekom izvođenja naredbe."""
+    def __init__(self, num, message):
+        self.num = num
+        self.message = message
+
+def calculate(unos, memory):
+    n = 0
     for naredba in unos.split(";"):
         naredba = naredba.strip()
+        n += 1
 
         if "var" in naredba:
             y = naredba[4:].replace(" ","")
@@ -56,13 +65,15 @@ def calculate(unos, memory):
                         if isinstance(v,Ordinal):
                             memory[variable] = v
                         else:
-                            print("Izraz sa desne strane ne odgovara Ordinalu.")
+                            raise CalculatorError(n,"Izraz sa desne strane jednakosti ne odgovara Ordinalu.")
+                    except CalculatorError as e:
+                        raise e
                     except:
-                        print("Izraz sa desne strane se ne može izračunati.")
+                        raise CalculatorError(n,"Izraz sa desne strane jednakosti nije moguće izračunati.")
                 else:
-                    print("Izraz sa desne strane nije definiran.")
+                    raise CalculatorError(n,"Izraz nije definiran.")
             else:
-                print("Ime varijable može se sadržavati od slova, brojeva i znaka $.\nNe može počinjati sa brojem te biti samo slovo w.")
+                raise CalculatorError(n,"Ime varijable može se sadržavati od slova, brojeva i znaka $.\nNe može počinjati sa brojem te biti samo slovo w.")
         else:
             for i in memory:
                 if i in naredba:
@@ -72,9 +83,9 @@ def calculate(unos, memory):
                 try:
                     print(repr(eval(naredba)))
                 except:
-                    print("Izraz se ne može izračunati.")
+                    raise CalculatorError(n,"Izraz nije moguće izračunati.")
             else:
-                print("Izraz nije definiran.\nAko ste htjeli dodijeliti vrijednost varijabli stavite 'var' na početak.")
+                raise CalculatorError(n,"Izraz nije definiran.\nAko ste htjeli dodijeliti vrijednost varijabli stavite 'var' na početak.")
             
 
 
@@ -168,7 +179,7 @@ True
                 
                 calculate(unos, memory)
             except CalculatorError as e:
-                print(e)
+                print("Greška u ",e.num,". naredbi: ",e.message)
     except KeyboardInterrupt:
         print()
         
