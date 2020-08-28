@@ -215,6 +215,177 @@ class Ordinal():
     
     def __hash__(self):
         return hash((Ordinal, frozenset(self.summands)))
+
+    def __and__(self, other):
+        """ Maksimum skupa ordinala {`self`, `other`}.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> w & 2
+        w
+        >>> w & b
+        w + 2
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+        
+        return max(self,other)
+
+    def __rand__(self, other):
+        """ Maksimum skupa ordinala {`self`, `other`}.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> 2 & w
+        w
+        """
+        return self & other
+
+    def __or__(self, other):
+        """ Minimum skupa ordinala {`self`, `other`}.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> w | 2
+        2
+        >>> w | b
+        w
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+        
+        return min(self,other)
+
+    def __ror__(self, other):
+        """ Minimum skupa ordinala {`self`, `other`}.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> 2 | w
+        2
+        """
+        return self | other
+
+    
+    def __rshift__(self, other):
+        """  Umnožak ordinala `self` sa potencijom Ordinal.omega na `other`.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> a = Ordinal(2)
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> a >> 2
+        w**2
+        >>> b >> a
+        w**3
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+            
+        return self * Ordinal.omega**other
+
+    def __rrshift__(self, other):
+        """  Umnožak ordinala `other` sa potencijom Ordinal.omega na `self`.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
+        >>> 2 >> b
+        w**(w + 2)
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+            
+        return other * Ordinal.omega**self
+
+    def __lshift__(self, other):
+        """  Količnik dijeljenja ordinala `self` sa potencijom Ordinal.omega na `other`.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj ili Ordinal
+
+        Primjeri
+        --------
+        >>> w = Ordinal([(Ordinal.one,1)])
+        >>> c = Ordinal([(Ordinal.omega,3),(Ordinal.zero,2)])
+        >>> w << 2
+        0
+        >>> c << w
+        3
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+            
+        return self // Ordinal.omega**other
+
+    def __rlshift__(self, other):
+        """  Količnik dijeljenja ordinala `other` sa potencijom Ordinal.omega na `self`.
+        
+        Parametri
+        ---------
+        self : Ordinal
+        other : prirodni broj
+
+        Primjeri
+        --------
+        >>> a = Ordinal(2)
+        >>> 2 << a
+        0
+        """
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+            
+        return other // Ordinal.omega**self
     
     def __add__(self, other):
         """ Zbroj ordinala `self` i `other`, tim redom.
@@ -618,7 +789,7 @@ class Ordinal():
         
         return other % self
     
-    def __truediv__(self, other):
+    def __divmod__(self, other):
         """ Količnik i ostatak dijeljenja ordinala `self` i `other`, tim redom.
         
         Parametri
@@ -635,16 +806,16 @@ class Ordinal():
         --------
         >>> w = Ordinal([(Ordinal.one,1)])
         >>> b = Ordinal([(Ordinal.one,1),(Ordinal.zero,2)])
-        >>> b / 2
+        >>> divmod(b,2)
         (w + 1, 0)
-        >>> b / w
+        >>> divmod(b,w)
         (1, 2)
         """
         q = self // other
         r = self - other*q
         return q,r
     
-    def __rtruediv__(self, other):
+    def __rdivmod__(self, other):
         """ Količnik i ostatak dijeljenja ordinala `other` i `self`, tim redom.
         
         Parametri
@@ -661,9 +832,9 @@ class Ordinal():
         --------
         >>> w = Ordinal([(Ordinal.one,1)])
         >>> a = Ordinal(2)
-        >>> 2 / a
+        >>> divmod(2,a)
         (1, 0)
-        >>> 2 / w
+        >>> divmod(2,w)
         (0, 2)
         """
         q = other // self
