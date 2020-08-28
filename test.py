@@ -31,6 +31,35 @@ class TestComparation(unittest.TestCase):
         self.assertFalse(w > p)
         self.assertFalse(p == w)
 
+
+class TestMaxMin(unittest.TestCase):
+    def test_natural_max_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+        t = Ordinal(3)
+
+        self.assertEqual(2 & t,t)
+        self.assertEqual(o & 2,o)
+
+    def test_ordinal_max_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+        p = Ordinal([(o,1),(Ordinal.zero,1)])
+
+        self.assertEqual(o & p, p)       
+        self.assertEqual(w & o, o)
+
+    def test_natural_min_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+        t = Ordinal(3)
+
+        self.assertEqual(2 | t,2)
+        self.assertEqual(o | 2,2)
+
+    def test_ordinal_min_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+        p = Ordinal([(o,1),(Ordinal.zero,1)])
+
+        self.assertEqual(o | p, o)       
+        self.assertEqual(w | o, w)
         
 
 class TestAddition(unittest.TestCase):
@@ -53,6 +82,7 @@ class TestAddition(unittest.TestCase):
         test2add = Ordinal([(Ordinal([(Ordinal([(y,1)]),3),(y,1)]),1),(Ordinal([(y,1)]),3),(y,1)])
         self.assertEqual(p + o, test2add)
 
+
 class TestSubstaction(unittest.TestCase):
     def test_natural_sub_ordinal(self):
         o = Ordinal([(w,3),(y,1)])
@@ -73,6 +103,7 @@ class TestSubstaction(unittest.TestCase):
 
         self.assertEqual(v + test1sub, u)
 
+
 class TestMultiplication(unittest.TestCase):
     def test_natural_mul_ordinal(self):
         o = Ordinal([(w,3),(y,1)])
@@ -89,6 +120,7 @@ class TestMultiplication(unittest.TestCase):
 
         test1mul = Ordinal([(Ordinal([(Ordinal([(y,1)]),3),(y,2)]),3),(Ordinal([(Ordinal([(y,1)]),3),(y,1),(z,1)]),1)])
         self.assertEqual(p * o, test1mul)
+
 
 class TestDivision(unittest.TestCase):
     def test_natural_div_ordinal(self):
@@ -131,7 +163,33 @@ class TestExponentation(unittest.TestCase):
 
         test2exp = Ordinal([(Ordinal([(w,3),(Ordinal(2),1)]),1)])
         self.assertEqual(o**o, test2exp)
-    
+
+
+class TestShift(unittest.TestCase):
+    def test_natural_shift_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+        t = Ordinal(3)
+
+        test1rshift = Ordinal([(w+2,1)])
+        self.assertEqual(o >> 2,test1rshift)
+
+        test1lshift = Ordinal([(w,3)])
+        self.assertEqual(o << 2,test1lshift)
+
+        test2rshift = Ordinal([(t,1)])
+        self.assertEqual(2 >> t,test2rshift)
+
+        test2lshift = z
+        self.assertEqual(2 << t,test2lshift)
+
+    def test_ordinal_shift_ordinal(self):
+        o = Ordinal([(w,3),(y,1)])
+
+        self.assertEqual(o << w, 3)
+
+        test1lshift = Ordinal([(w*2,1)])
+        self.assertEqual(o >> w, test1lshift)
+
 
 class TestSummation(unittest.TestCase):
     def test_natural_ordinal(self):
