@@ -20,78 +20,35 @@ def calculate(unos, memory):
         naredba = naredba.strip()
         n += 1
 
-        if "var" in naredba:
-            y = naredba[4:].replace(" ","")
-            
-            if "+=" in naredba:
-                variable, value = y.split('+=')
-                value = variable + "+" + value
+        naredba = naredba.replace("ω","w").replace("×","*").replace("·","*").replace("÷","//").replace("^","**")
 
-            elif "-=" in naredba:
-                variable, value = y.split('-=')
-                value = variable + "-" + value
+        if "<<" in naredba or ">>" in naredba:
+            naredba = naredba + " + Ordinal(0)"
 
-            elif "%=" in naredba:
-                variable, value = y.split('%=')
-                value = variable + "%" + value 
+        try:
+            try:
+                ans = eval(naredba, globals(), memory)
+                memory["_"] = ans
 
-            elif "//=" in naredba:
-                variable, value = y.split('//=')
-                value = variable + "//" + value
-                
-            elif "**=" in naredba:
-                variable, value = y.split('**=')
-                value = variable + "**" + value
-                
-            elif "*=" in naredba:
-                variable, value = y.split('*=')
-                value = variable + "*" + value
-                
-            else:
-                variable, value = y.split('=')
-
-            #print(variable, value)
-
-            if variable != "w" and re.match(r"^[a-zA-Z_$][a-zA-Z_$0-9]*$", variable):
-                for i in memory:
-                    if i in value:
-                        value = value.replace(i,"("+repr(memory[i])+")")
-                
-                if re.match(r"^[ \*\+\/\-%()w0-9]*$", value):
-                    try:
-                        v = eval(value)
-                        v = Ordinal.coerce(v)
-                        
-                        if isinstance(v,Ordinal):
-                            memory[variable] = v
-                        else:
-                            raise CalculatorError(n,"Izraz sa desne strane jednakosti ne odgovara Ordinalu.")
-                    except CalculatorError as e:
-                        raise e
-                    except:
-                        raise CalculatorError(n,"Izraz sa desne strane jednakosti nije moguće izračunati.")
-                else:
-                    raise CalculatorError(n,"Izraz nije definiran.")
-            else:
-                raise CalculatorError(n,"Ime varijable može se sadržavati od slova, brojeva i znaka $.\nNe može počinjati sa brojem te biti samo slovo w.")
-        else:
-            for i in memory:
-                if i in naredba:
-                    naredba = naredba.replace(i,"("+repr(memory[i])+")")
-
-            if re.match(r"^[ =><\*\+\/\-%()w0-9]*$", naredba):
-                try:
-                    print(repr(eval(naredba)))
-                except:
-                    raise CalculatorError(n,"Izraz nije moguće izračunati.")
-            else:
-                raise CalculatorError(n,"Izraz nije definiran.\nAko ste htjeli dodijeliti vrijednost varijabli stavite 'var' na početak.")
+                ans = repr(ans).replace("w","ω").replace("**","^").replace("*","·")
+                print(ans)
+            except:
+                exec(naredba, globals(), memory)
+                if 'w' in memory:
+                    del memory['w']
+                    raise CalculatorError(n,"Ime varijable ne može biti w.")
+                #print(memory)
+        except CalculatorError as e:
+            raise e
+        except:
+            raise CalculatorError(n,"Naredbu nije moguće izvršiti.")
             
 
 
 def main():
-    print("ORDINALNI KALKULATOR by BB")
-    print("==========================\n")
+    print("  ORDINALNI KALKULATOR by BB")
+    print("><><><><><><><><><><><><><><><\n")
+    print("Za sve informacije o korištenju ove aplikacije koristite naredbu help.")
 
     memory = dict()
     try:
@@ -106,8 +63,35 @@ def main():
                     print('''
 Dobrodošli u Ordinalni kalkulator.
 
-Ovo je aplikacija napravljena za provođenje aritmetičkih operacija
-nad ordinalnim brojevima. Operacije koje je moguće provoditi su:
+Ovo je aplikacija napravljena za provođenje aritmetičkih operacija nad
+ordinalnim brojevima. Mogući je standardni python unos gdje je w zamjena
+za grčko slovo omega:
+
+ordCalc> (w**w*2 + w**2 + 4) // w**2
+
+Ili unos koristeći unicode znakove:
+
+ordCalc> (ω^ω×2 + ω^2 + 4) ÷ ω^2
+
+Ukoliko ne vidite unicode znakove promijenite font terminala u Lucida console
+ili Consolas.
+
+Za dohvat zadnjeg rezultata izračunatog kalkulatorom koristite varijablu `_`.
+Operacije koje je moguće provoditi su:
+
+Dodjeljivanje vrijednosti
+-------------------------
+ordCalc> x = w + 1
+ordCalc> x
+ω + 1
+ordCalc> x += w * 2 + 4
+ordCalc> x
+ω·3 + 4
+
+Moguće je navesti više naredbi u jednom retku, odvajamo ih separatorom ";".
+
+ordCalc> y = w ** w + w ** 3 * 2 + w + 4; y += 5; y
+ω^ω + ω^3·2 + ω + 9
 
 Uspoređivanje
 -------------
@@ -119,60 +103,67 @@ True
 Zbrajanje
 ---------
 ordCalc> 2 + w
-w
+ω
 ordCalc> (w ** 2 + w * 1 + 4) + (w * 2 + 3)
-w**2 + w*3 + 3
+ω^2 + ω·3 + 3
 
 Množenje
 --------
 ordCalc> 2 * w
-w
+ω
 ordCalc> (w ** w * 3 + w) * 2
-w**w*6 + w
+ω^ω·6 + ω
 
 Potenciranje
 ------------
 ordCalc> 2 ** w
-w
+ω
 ordCalc> (w + 1) ** (w + 1)
-w**(w + 1) + w**w
-
-Dodjeljivanje vrijednosti
--------------------------
-Prije varijable kojoj želite dodijeliti vrijednost stavite riječ "var".
-
-ordCalc> var x = w + 1
-ordCalc> x
-w + 1
-ordCalc> var x += w * 2 + 4
-ordCalc> x
-w*3 + 4
-
-Moguće je navesti više naredbi u jednom retku, odvajamo ih separatorom ";".
-
-ordCalc> var y = w ** w + w ** 3 * 2 + w + 4; var y += 5; y
-w**w + w**3*2 + w + 9
+ω^(ω + 1) + ω^ω
 
 Oduzimanje
 ----------
 ordCalc> w - 1
-w
-ordCalc> var a = w**w*3 + w**3*5 + w + 4; var b = w**w*3 + w**3*3 + 2; a - b
-w**3*2 + w + 4
-ordCalc> var c = a - b; b + c == a
-True
+ω
+ordCalc> (w**w*3 + w**3*5 + w + 4) - (w**w*3 + w**3*3 + 2)
+ω^3·2 + ω + 4
 
 Dijeljenje
 ----------
-ordCalc> var a = w**w + w**3*2 + w**2*5 + 4; var b = w**2*4 + w*7 + 5; a / b
-(w**w + w*2 + 1, w**2 + 4)
+ordCalc> a = w**w + w**3*2 + w**2*5 + 4; b = w**2*4 + w*7 + 5; divmod(a,b)
+(ω^ω + ω·2 + 1, ω^2 + 4)
 ordCalc> a // b
-w**w + w*2 + 1
+ω^ω + ω·2 + 1
 ordCalc> a % b
-w**2 + 4
-ordCalc>  var x = w**2 + w; x / w
-(w + 1, 0)
-ordCalc> var q = x // w; var r = x % w; w*q + r == x
+ω^2 + 4
+ordCalc> x = w**2 + w; divmod(x,w)
+(ω + 1, 0)
+ordCalc> q = x // w; r = x % w; w*q + r == x
+True
+
+Maksimum
+--------
+ordCalc> w**4 & w**3*2 + w**2 + 4
+ω^4
+ordCalc> (w**1)**w & w**(1**w)
+ω^ω
+
+Minimum
+-------
+ordCalc> w**4 | w**3*2 + w**2 + 4
+ω^3·2 + ω^2 + 4
+ordCalc> (w**1)**w | w**(1**w)
+ω
+
+Lijevi i desni pomak baze ω
+---------------------------
+ordCalc> w**w + w**5 << 4
+ω^ω + ω
+ordCalc> w**w + w**5 << 4 == (w**w + w**5) // w**4
+True
+ordCalc> w**w + w**5 >> 4
+ω^(ω + 4)
+ordCalc> w**w + w**5 >> 4 == (w**w + w**5) * w**4
 True
                     ''')
                     continue
