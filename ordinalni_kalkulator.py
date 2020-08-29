@@ -254,7 +254,12 @@ class Ordinal():
         >>> 2 & w
         w
         """
-        return self & other
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+        
+        return max(self,other)
 
     def __or__(self, other):
         """ Minimum skupa ordinala {`self`, `other`}.
@@ -294,7 +299,12 @@ class Ordinal():
         >>> 2 | w
         2
         """
-        return self | other
+        other = Ordinal.coerce(other)
+        
+        if not isinstance(other, Ordinal):
+            return NotImplemented
+        
+        return min(self,other)
 
     
     def __rshift__(self, other):
@@ -922,17 +932,12 @@ class Ordinal():
                                 coef1 = self.summands[i][1]
 
                                 tmpExp =  self.summands[0][0] * (coef2-j-1)
-
-                                if tmpExp == 0:
-                                    return Ordinal.zero
-
                                 tmpExp = tmpExp + exp1
 
-                                if tmpExp == 0:
-                                    return Ordinal.zero
                                 result[tmpExp] = coef1
                                 i += 1
 
+                        coef1 = self.summands[i][1]
                         result[Ordinal.zero] = coef1
                     
         else:
@@ -977,8 +982,6 @@ class Ordinal():
                             natTerm = True
 
                 tmpExp = exp1*tmp
-                if tmpExp == 0:
-                    return Ordinal.zero
                 result[tmpExp] = 1
                 
                 
