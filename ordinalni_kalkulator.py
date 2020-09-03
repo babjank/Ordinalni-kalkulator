@@ -743,18 +743,7 @@ class Ordinal():
             if not isinstance(mod, Ordinal):
                 return NotImplemented
         
-            base = self
-            exp = other
-            result = Ordinal.one
-            while exp > 0:
-                if exp % 2 == 0:
-                    print(base,mod)
-                    base = (base * base) % mod
-                    exp = exp // 2
-                else:
-                    result = (base * result) % mod
-                    exp = exp - 1
-            return result
+            return self ** other % mod
         
         natTerm = False #ima li other = w^a1*n1+...+w^ak*nk u cnf zapisu ak=0
         
