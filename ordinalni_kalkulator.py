@@ -718,11 +718,23 @@ class Ordinal():
             
     def __pow__(self, other, mod = None):
         """ Potencija ordinala `self` na `other`.
+        Ukoliko se da i treći argument računa se potencija ordinala `self` na
+        `other` modulo `mod`.
         
         Parametri
         ---------
         self : Ordinal
         other : prirodni broj ili Ordinal
+        mod : prirodan broj ili Ordinal, opcionalan
+
+        Napomene
+        --------
+        Inače je cilj modularnog potenciranja da se koristeći pravilo
+        (a * b) mod m = [(a mod m) * (b mod m)] mod m ubrza računanje,
+        no to ne vrijedi u ordinalnoj aritmetici.
+        >>> b = w + 2
+        >>> (w*b) % b == ((w % b)*(b % b)) % b
+        False
 
         Primjeri
         --------
