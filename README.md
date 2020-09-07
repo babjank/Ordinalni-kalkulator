@@ -8,9 +8,11 @@ Ukoliko ste to zadovoljili, sljedeći korak je preuzimanje ovog repozitorija ili
 ```
 git clone https://github.com/babjank/Ordinalni-kalkulator.git
 ```
-ili jednostavno preuzimanja zipa datoteke.
+ili jednostavno preuzimanjem zip-a direktorija.
 
-Moguće je koristiti biblioteku ordinalni_kalkulator.py samostalno, kao što je prikazano u notebooku "Ordinalni kalkulator - primjeri", no preporuča se korištenje unutar aplikacije OrdCalc. 
+----------------------------------------------------------------
+
+Moguće je koristiti modul ordinalni_kalkulator samostalno, kao što je prikazano u notebooku "Ordinalni kalkulator - primjeri", no preporuča se korištenje unutar aplikacije OrdCalc. 
 
 Za detaljan opis kako koristiti OrdCalc upišite naredbu _help_. Ovdje je prikazan kratki pregled:
 
