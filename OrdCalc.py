@@ -2,8 +2,6 @@ from ordinalni_kalkulator import *
 import re
 import time
 
-w = Ordinal.omega
-
 class Error(Exception):
     """Bazna klasa za greške."""
     pass
@@ -143,28 +141,17 @@ True
 
 Maksimum
 --------
-ordCalc> w**4 & w**3*2 + w**2 + 4
+ordCalc> max(w**4,w**3*2 + w**2 + 4)
 ω^4
-ordCalc> (w**1)**w & w**(1**w)
+ordCalc> max((w**1)**w, w**(1**w))
 ω^ω
 
 Minimum
 -------
-ordCalc> w**4 | w**3*2 + w**2 + 4
+ordCalc> min(w**4,w**3*2 + w**2 + 4)
 ω^3·2 + ω^2 + 4
-ordCalc> (w**1)**w | w**(1**w)
+ordCalc> min((w**1)**w, w**(1**w))
 ω
-
-Lijevi i desni pomak baze ω
----------------------------
-ordCalc> w**w + w**5 << 4
-ω^ω + ω
-ordCalc> w**w + w**5 << 4 == (w**w + w**5) // w**4
-True
-ordCalc> w**w + w**5 >> 4
-ω^(ω + 4)
-ordCalc> w**w + w**5 >> 4 == (w**w + w**5) * w**4
-True
                     ''')
                     continue
                 
